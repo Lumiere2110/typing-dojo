@@ -2,7 +2,7 @@
 
 漢字と英単語のタイピングゲームです。HTML ファイル1つで動きます。
 
-**遊ぶ:** https://neat0427.github.io/typing-dojo/
+**遊ぶ:** https://lumiere2110.github.io/typing-dojo/
 
 ## 種目
 
