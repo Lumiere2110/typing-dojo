@@ -218,184 +218,8 @@ section.panel { display: flex; flex-direction: column; gap: 10px; }
   <div id="result" hidden style="flex-direction:column;gap:22px"></div>
 </div>
 
+<script src="words.js"></script>
 <script>
-/* ============ 問題データ ============ */
-const KANJI = {
-1: { t: "小学〜中学", sample: "図書館", list: [
-  ["学校","がっこう","児童・生徒が勉強する所","「学」は小1で習う字。「がくこう」ではなく促音になって「がっこう」と読む。"],
-  ["友達","ともだち","親しくつきあう人","「達」は複数を表す接尾語だったが、今は一人でも「友達」と言う。"],
-  ["天気","てんき","空の様子・晴れや雨などの状態","「天」はそら、「気」は空気のこと。「天気がいい」は晴れを指す。"],
-  ["図書館","としょかん","本や資料を集めて貸し出す施設","「図」は「ず」だけでなく「と」とも読む（図書・意図）。"],
-  ["自転車","じてんしゃ","ペダルをこいで走る二輪車","自ら（自）回転する（転）車、という成り立ち。"],
-  ["野菜","やさい","食用にする草や植物","「菜」は小4で習う。訓読みは「な」（菜の花）。"],
-  ["宿題","しゅくだい","家でやるように出される課題","「宿」には「前から持ち越している」という意味がある。「しゅく」の入力は shu / syu どちらでもよい。"],
-  ["電車","でんしゃ","電気の力で線路を走る車両","「しゃ」は sha / sya のどちらでも入力できる。"],
-  ["運動会","うんどうかい","学校などで行う体育の行事","「ん」の後に母音以外が続くときは n 一つでも入力できる（u n d o …）。"],
-  ["季節","きせつ","春夏秋冬などの時期の区切り","「季」は「禾（のぎへん）」に「子」。「委」と形が似ているので注意。"],
-  ["新聞","しんぶん","ニュースを伝える定期刊行物","「聞」は門の中に耳。「問」（門＋口）と書き分ける。"],
-  ["動物","どうぶつ","自分で動き回る生き物","「物」は「もつ・ぶつ・もの」と読み方が多い字。"],
-  ["料理","りょうり","食べ物をこしらえること","「りょ」は ryo と打つ。「りよ」と分けないこと。"],
-  ["時計","とけい","時刻を示す機械","「時」を「と」と読む特別な読み方（熟字訓）。"],
-  ["誕生日","たんじょうび","生まれた日","「誕」は小6で習う字。「延」と形が似ているので注意。"]
-]},
-2: { t: "中学〜高校基礎", sample: "矛盾", list: [
-  ["環境","かんきょう","人や生物をとりまく周囲の状態","「環」は輪のこと。「還（かえる）」と書き間違えやすい。"],
-  ["努力","どりょく","目標に向けて力を尽くすこと","「努」は「つと（める）」。下が「力」なら努、「心」なら怒（いかる）なので書き分ける。"],
-  ["経験","けいけん","実際に見たりしたりすること","「験」は馬へん。「険（けわしい）」「検（しらべる）」と使い分ける。"],
-  ["貿易","ぼうえき","外国と商品を売り買いすること","「易」は「えき（交換する）」と「い（やさしい）」の二つの読みがある。"],
-  ["憲法","けんぽう","国の基本となる最高法規","「法」は前に「ん」が付くと「ぽう」と半濁音になる。"],
-  ["傾向","けいこう","物事がある方向にかたむくこと","「傾」は「かたむ（く）」。人が頭を傾ける形から。"],
-  ["継続","けいぞく","前から続けていること","「継」も「続」も糸へん。糸をつなぐイメージ。"],
-  ["証拠","しょうこ","事実を明らかにするよりどころ","「拠」は「よりどころ」の意味。「根拠」「拠点」も同じ字。"],
-  ["偶然","ぐうぜん","思いがけずそうなること","対義語は「必然」。「遇（あう）」と書き間違えやすい。"],
-  ["犠牲","ぎせい","目的のために大切なものを失うこと","どちらも牛へん。もとは神にささげる生きた動物の意味。"],
-  ["抵抗","ていこう","外からの力に逆らうこと","「抵」も「抗」も手へん。「低」「坑」と混同しない。"],
-  ["矛盾","むじゅん","つじつまが合わないこと","何でも突く矛と何も通さない盾を売った商人の故事（『韓非子』）から。"],
-  ["挨拶","あいさつ","人に会ったときなどの礼儀の言葉","もとは禅の言葉で、問答で相手の力量を試すこと。両方とも手へん。"],
-  ["曖昧","あいまい","はっきりしないこと","どちらも日へん。日がかげってぼんやりした様子から。"],
-  ["依頼","いらい","人に用事を頼むこと","「依」は「よる・たよる」。「依存（いぞん）」も同じ字。"]
-]},
-3: { t: "高校〜一般", sample: "葛藤", list: [
-  ["把握","はあく","しっかり理解すること","もとは手でしっかりつかむ意味。「握」は「にぎ（る）」。"],
-  ["妥協","だきょう","対立する者が互いに譲り合うこと","「妥」は「おだやか・ほどよい」の意味。「妥当」も同じ字。"],
-  ["葛藤","かっとう","心の中で迷い苦しむこと","葛（くず）と藤（ふじ）のつるがもつれ合う様子から。"],
-  ["顕著","けんちょ","際立って目につくこと","「顕」は「あらわ（れる）」。「著」も「いちじる（しい）」と読む。"],
-  ["措置","そち","問題に対して必要な手続きを取ること","「措」は「おく・処理する」。「借（かりる）」と書き間違えやすい。"],
-  ["懸念","けねん","気にかかって不安に思うこと","「懸」は普通「けん」だが、この語では「け」と読む。"],
-  ["示唆","しさ","それとなく知らせること","「唆」は「そそのか（す）」。「教唆（きょうさ）」も同じ字。"],
-  ["該当","がいとう","条件などにあてはまること","「該」は「その・あてはまる」の意。「核」と形が似ている。"],
-  ["逸脱","いつだつ","本来の筋道からそれること","「逸」は「そ（れる）」。「逸話」「秀逸」でも使う。"],
-  ["遂行","すいこう","任務などを最後までやりとげること","「遂」は「と（げる）」。「すいぎょう」ではなく「すいこう」。"],
-  ["拮抗","きっこう","力がほぼ同じで張り合うこと","「拮」は「しめつける」の意。促音「きっ」は kki と子音を重ねる。"],
-  ["払拭","ふっしょく","すっかり取り除くこと","「拭」は「ふ（く）・ぬぐ（う）」。「ふっしき」は誤読。"],
-  ["恣意的","しいてき","思うままで筋が通らないさま","「恣」は「ほしいまま」。「意図的」とは意味が違うので注意。"],
-  ["踏襲","とうしゅう","前のやり方をそのまま受け継ぐこと","「襲」は「おそ（う）」のほか「受け継ぐ」の意味がある（世襲）。"],
-  ["脆弱","ぜいじゃく","もろくて弱いこと","「脆」は「もろ（い）」。「きじゃく」は誤読。"]
-]},
-4: { t: "教養・難読", sample: "齟齬", list: [
-  ["齟齬","そご","食い違って合わないこと","上下の歯がかみ合わない様子から。どちらも歯へん。"],
-  ["杞憂","きゆう","無用な心配","杞の国の人が天が落ちてこないか心配した故事（『列子』）から。"],
-  ["逼迫","ひっぱく","行き詰まって余裕がないこと","「逼」も「迫」も「せまる」。財政や需給の場面でよく使う。"],
-  ["忖度","そんたく","他人の心をおしはかること","「忖」も「度」も「はかる」。近年は「上の意向をくむ」意味で使われがち。"],
-  ["揶揄","やゆ","からかうこと","どちらも手へん。「からかう」の硬い言い方。"],
-  ["憔悴","しょうすい","心配や疲れでやつれること","どちらも心（りっしんべん）が付く。「しょうそつ」は誤読。"],
-  ["慟哭","どうこく","声をあげて激しく泣くこと","「慟」は身を震わせて悲しむ、「哭」は声をあげて泣く。"],
-  ["斟酌","しんしゃく","相手の事情をくみ取って手加減すること","どちらも「くむ（酒などをすくう）」の意味から。"],
-  ["瓦解","がかい","組織などが一部から崩れて全体が壊れること","屋根瓦の一枚が落ちると次々に崩れる様子から。"],
-  ["嚆矢","こうし","物事のはじまり","昔の中国で開戦の合図に鳴りかぶら矢（嚆矢）を射たことから。"],
-  ["蹂躙","じゅうりん","踏みにじること","どちらも足へん。「じゅう」は ju / zyu / jyu で入力できる。"],
-  ["贔屓","ひいき","気に入った者を特別に引き立てること","「贔」は貝が三つで「力を入れる」の意。"],
-  ["呂律","ろれつ","ものを言うときの調子","雅楽の音階「呂」と「律」が合わないことから「呂律が回らない」と言う。"],
-  ["頓挫","とんざ","計画などが途中で行き詰まること","「頓」は「つまずく」、「挫」は「くじ（く）」。"],
-  ["辟易","へきえき","うんざりして嫌になること","もとは「相手の勢いに道をあけて退く」意味。「易」を「えき」と読む。"]
-]},
-5: { t: "超難読・熟字訓", sample: "魑魅魍魎", list: [
-  ["魑魅魍魎","ちみもうりょう","さまざまな化け物","「魑魅」は山の化け物、「魍魎」は川の化け物。全部「鬼」が付く。"],
-  ["躊躇","ちゅうちょ","決心がつかずためらうこと","どちらも足へん。足が進まない様子から。"],
-  ["薔薇","ばら","とげのある木に咲く花","漢字検定1級レベルの難字。音読みは「しょうび・そうび」。"],
-  ["鬱蒼","うっそう","木が茂って薄暗いさま","「鬱」は29画。促音「うっ」は sso と子音を重ねる。"],
-  ["檸檬","れもん","かんきつ類の果物","外来語に漢字を当てた語。梶井基次郎の小説の題名でも有名。"],
-  ["蒲公英","たんぽぽ","春に黄色い花を咲かせる草","漢名をそのまま日本語の名前で読む熟字訓。"],
-  ["紫陽花","あじさい","梅雨の頃に咲く花","中国の詩人・白居易が別の花に付けた名前が当てられたとされる。"],
-  ["海月","くらげ","海に漂うゼラチン質の生き物","海に浮かぶ月のような姿から。「水母」とも書く。"],
-  ["秋刀魚","さんま","秋に旬を迎える細長い魚","秋にとれる、刀のような形の魚という当て字。"],
-  ["啄木鳥","きつつき","木をつついて虫を捕る鳥","「啄」は「ついばむ」。石川啄木の号もこの字から。"],
-  ["欠伸","あくび","眠いときに出る大きな呼吸","「欠」はもともと口を開けて息をする人の形。"],
-  ["東雲","しののめ","夜明け方","東の空が明るくなる頃の雲、という意味の熟字訓。"],
-  ["十六夜","いざよい","陰暦十六日の夜（の月）","満月の翌夜、月の出が少し遅れて「いさよう（ためらう）」ことから。"],
-  ["蝸牛","かたつむり","殻を背負った陸の巻き貝","音読みは「かぎゅう」。角を出す姿を牛に見立てた。"],
-  ["百足","むかで","たくさんの足を持つ節足動物","足が多いことを「百」で表した当て字。"]
-]}
-};
-
-const ENG = {
-1: { t: "中学", sample: "library", list: [
-  ["friend","友達","名詞","She is my best friend.","彼女は私の一番の友達だ。","ie の順番に注意。「フレンド」の音につられて frend と書きがち。"],
-  ["school","学校","名詞","I walk to school every day.","私は毎日歩いて学校へ行く。","sch の h を忘れやすい。発音しない h がある。"],
-  ["library","図書館","名詞","I borrowed this book from the library.","この本は図書館で借りた。","libr の r を落として libary としやすい。"],
-  ["beautiful","美しい","形容詞","What a beautiful sunset!","なんて美しい夕日だろう。","beau の eau が難所。beauty + ful で y が i に変わる。"],
-  ["important","大切な","形容詞","Sleep is important for your health.","睡眠は健康にとって大切だ。","im + port + ant。portant の t を落とさない。"],
-  ["morning","朝","名詞","I drink milk every morning.","毎朝牛乳を飲む。","mor + ning。n が二つ入る。"],
-  ["mountain","山","名詞","We climbed a high mountain.","私たちは高い山に登った。","語尾は -tain。-tin や -ten ではない。"],
-  ["breakfast","朝食","名詞","I had toast for breakfast.","朝食にトーストを食べた。","break（破る）+ fast（断食）。夜の断食を破る食事が語源。"],
-  ["family","家族","名詞","There are four people in my family.","私の家族は4人です。","famil + y。l は一つ。"],
-  ["weather","天気","名詞","The weather is nice today.","今日は天気がいい。","同じ発音の whether（〜かどうか）と区別する。ea の綴り。"],
-  ["question","質問","名詞","May I ask a question?","質問してもいいですか。","qu の後に e。ques + tion。"],
-  ["together","一緒に","副詞","Let's go together.","一緒に行こう。","to + get + her と三つに分けると覚えやすい。"],
-  ["different","違う","形容詞","Your idea is different from mine.","君の考えは私のと違う。","f が二つ。diff + er + ent。"],
-  ["remember","覚えている","動詞","I remember his name.","彼の名前を覚えている。","re + member。m が二回出てくる。"],
-  ["believe","信じる","動詞","I believe you.","君を信じる。","「i before e」の規則どおり ie。中に lie（うそ）が入ると覚える。"]
-]},
-2: { t: "高校基礎", sample: "experience", list: [
-  ["environment","環境","名詞","We need to protect the environment.","私たちは環境を守る必要がある。","environ + ment。n を落として enviroment と書くミスが多い。"],
-  ["government","政府","名詞","The government announced a new plan.","政府は新しい計画を発表した。","govern（統治する）+ ment。こちらも n を落としやすい。"],
-  ["experience","経験","名詞","She has a lot of experience in teaching.","彼女は教える経験が豊富だ。","ex + peri + ence。-ance ではなく -ence。"],
-  ["opportunity","機会","名詞","This is a great opportunity to learn.","これは学ぶための絶好の機会だ。","p が二つ。op + port + unity。"],
-  ["necessary","必要な","形容詞","Water is necessary for life.","水は生命に必要だ。","c は一つ、s は二つ（one collar, two sleeves と覚える）。"],
-  ["communicate","伝え合う","動詞","We communicate by email.","私たちはメールで連絡を取り合う。","m が二つ。common（共通の）と同じ語源。"],
-  ["influence","影響","名詞","Music had a big influence on him.","音楽は彼に大きな影響を与えた。","in + flu（流れ込む）+ ence。"],
-  ["recognize","認識する","動詞","I didn't recognize her at first.","最初は彼女だと気づかなかった。","re + cogn + ize。g を忘れやすい。"],
-  ["available","利用できる","形容詞","Tickets are available online.","チケットはオンラインで手に入る。","avail + able。ai の後に l が一つ。"],
-  ["decision","決定","名詞","It was a difficult decision.","それは難しい決断だった。","decide の名詞形。d が s に変わり -sion になる。"],
-  ["knowledge","知識","名詞","Knowledge is power.","知識は力なり。","最初の k は発音しない。know + ledge で d を忘れない。"],
-  ["temperature","温度","名詞","The temperature dropped below zero.","気温が氷点下に下がった。","temper + ature。真ん中の er を落としやすい。"],
-  ["achieve","達成する","動詞","She achieved her goal.","彼女は目標を達成した。","ie の順番。chief（長）と同じ ie。"],
-  ["consider","よく考える","動詞","Please consider my proposal.","私の提案を検討してください。","con + sider。s は一つ。"],
-  ["society","社会","名詞","We live in a modern society.","私たちは現代社会に生きている。","social と同じ語源。ie の順番に注意。"]
-]},
-3: { t: "大学受験", sample: "phenomenon", list: [
-  ["ambiguous","あいまいな","形容詞","His answer was ambiguous.","彼の答えはあいまいだった。","ambi（両方）+ guous。どちらにも取れる、が語源。"],
-  ["sufficient","十分な","形容詞","We have sufficient food for a week.","1週間分の十分な食料がある。","f が二つ。-cient の綴りは efficient と同じ。"],
-  ["phenomenon","現象","名詞","Rainbows are a natural phenomenon.","虹は自然現象だ。","ph で f の音。複数形は phenomena。"],
-  ["inevitable","避けられない","形容詞","Change is inevitable.","変化は避けられない。","in（否定）+ evit（避ける）+ able。"],
-  ["contemporary","現代の","形容詞","She studies contemporary art.","彼女は現代美術を研究している。","con（共に）+ tempor（時）+ ary。"],
-  ["substantial","かなりの・相当な","形容詞","There was a substantial increase in sales.","売上がかなり増えた。","substance（実質）の形容詞形。-tial で終わる。"],
-  ["comprehensive","包括的な","形容詞","We need a comprehensive plan.","包括的な計画が必要だ。","comprehend（理解する）とは意味がずれるので注意。h を忘れない。"],
-  ["hypothesis","仮説","名詞","The data support the hypothesis.","データはその仮説を支持している。","hypo（下に）+ thesis（置く）。y の位置に注意。"],
-  ["deteriorate","悪化する","動詞","His health began to deteriorate.","彼の健康は悪化し始めた。","deter + ior + ate。真ん中の ior を落としやすい。"],
-  ["accommodate","収容する・適応させる","動詞","The hotel can accommodate 200 guests.","そのホテルは200人収容できる。","c も m も二つずつ。最頻出のスペルミス語の一つ。"],
-  ["legitimate","正当な","形容詞","That is a legitimate concern.","それは正当な懸念だ。","legi（法）+ timate。-mate で終わる。"],
-  ["perceive","知覚する・気づく","動詞","I perceived a change in his voice.","彼の声の変化に気づいた。","c の後は ei（receive と同じ型）。"],
-  ["consequence","結果・影響","名詞","You must accept the consequences.","結果は受け入れなければならない。","con + sequ（続く）+ ence。sequence を含む。"],
-  ["vulnerable","傷つきやすい","形容詞","Children are vulnerable to the cold.","子どもは寒さに弱い。","vulner（傷）+ able。n を忘れて vulerable としやすい。"],
-  ["unprecedented","前例のない","形容詞","This is an unprecedented situation.","これは前例のない事態だ。","un + precedent（前例）+ ed。e の数を数えて打つ。"]
-]},
-4: { t: "英検準1級", sample: "ubiquitous", list: [
-  ["meticulous","細心の注意を払った","形容詞","He is meticulous about details.","彼は細部まで細心の注意を払う。","ラテン語の metus（恐れ）から。失敗を恐れるほど慎重、のイメージ。"],
-  ["ubiquitous","どこにでもある","形容詞","Smartphones are ubiquitous today.","今やスマートフォンはどこにでもある。","ubique（いたる所に）から。qu の後に i。"],
-  ["scrutinize","綿密に調べる","動詞","The editor scrutinized the report.","編集者は報告書を綿密に調べた。","scrutiny（精査）の動詞形。scru + tin + ize。"],
-  ["pragmatic","実用的な","形容詞","We need a pragmatic approach.","実際的な取り組みが必要だ。","practical に近い。理想より実際の結果を重視するさま。"],
-  ["resilient","回復力のある","形容詞","Kids are remarkably resilient.","子どもは驚くほど立ち直りが早い。","re（後ろへ）+ sili（跳ねる）+ ent。"],
-  ["eloquent","雄弁な","形容詞","She gave an eloquent speech.","彼女は雄弁なスピーチをした。","e（外へ）+ loqu（話す）+ ent。"],
-  ["alleviate","和らげる","動詞","This medicine alleviates pain.","この薬は痛みを和らげる。","l が二つ。lev（軽くする）が入っている。"],
-  ["ostensibly","表向きは","副詞","He was ostensibly on vacation.","彼は表向きは休暇中だった。","ostens（見せる）+ ibly。-ably ではなく -ibly。"],
-  ["conspicuous","目立つ","形容詞","She wore a conspicuous red hat.","彼女は目立つ赤い帽子をかぶっていた。","con + spic（見る）+ uous。inconspicuous は反対の意味。"],
-  ["procrastinate","先延ばしにする","動詞","Stop procrastinating and start now.","先延ばしをやめて今始めなさい。","pro（前へ）+ crastin（明日の）。明日へ回す、が語源。"],
-  ["exacerbate","悪化させる","動詞","Stress can exacerbate the illness.","ストレスは病気を悪化させうる。","ex + acerb（苦い・厳しい）+ ate。c と b の位置に注意。"],
-  ["benevolent","慈悲深い","形容詞","He was a benevolent ruler.","彼は慈悲深い統治者だった。","bene（よい）+ vol（意志）+ ent。反対は malevolent。"],
-  ["tenacious","粘り強い","形容詞","She is tenacious in her research.","彼女は粘り強く研究する。","ten（保つ）+ acious。つかんだら放さないイメージ。"],
-  ["plausible","もっともらしい","形容詞","His excuse sounded plausible.","彼の言い訳はもっともらしく聞こえた。","-able ではなく -ible。applaud（拍手する）と同語源。"],
-  ["superfluous","余分な","形容詞","Remove any superfluous words.","余分な言葉は削りなさい。","super（上に）+ flu（流れる）+ ous。あふれ出るほど余分。"]
-]},
-5: { t: "英検1級", sample: "ephemeral", list: [
-  ["ephemeral","はかない","形容詞","Fame is often ephemeral.","名声はしばしばはかない。","ギリシャ語 ephemeros（一日だけの）から。ph で f の音。"],
-  ["sycophant","おべっか使い","名詞","The king was surrounded by sycophants.","王はおべっか使いに囲まれていた。","sy の y と、語尾の phant に注意。"],
-  ["obfuscate","わかりにくくする","動詞","Don't obfuscate the issue.","問題をわかりにくくするな。","ob + fusc（暗い）+ ate。"],
-  ["quintessential","典型的な","形容詞","It is a quintessential English village.","典型的なイギリスの村だ。","quint（五番目）+ essence。第五元素＝本質が語源。s が二つ。"],
-  ["perfunctory","おざなりの","形容詞","He gave a perfunctory nod.","彼はおざなりにうなずいた。","per（通して）+ function。ただ済ませるだけ、の意。"],
-  ["magnanimous","寛大な","形容詞","She was magnanimous in victory.","彼女は勝っても寛大だった。","magn（大きい）+ anim（心）+ ous。"],
-  ["recalcitrant","反抗的な","形容詞","The recalcitrant child refused to eat.","反抗的な子どもは食べるのを拒んだ。","re + calc（かかと）。かかとで蹴り返す、が語源。"],
-  ["idiosyncrasy","特異性・くせ","名詞","Everyone has their own idiosyncrasies.","誰にでもその人なりのくせがある。","語尾は -cy ではなく -sy。idio（独自の）+ syn + crasy。"],
-  ["surreptitious","こっそりした","形容詞","He took a surreptitious glance.","彼はこっそり盗み見た。","r が二つ、t は二回。sur + rept（つかむ）+ itious。"],
-  ["cacophony","耳障りな音","名詞","A cacophony of horns filled the street.","クラクションの騒音が通りに満ちた。","caco（悪い）+ phony（音）。反対は euphony。"],
-  ["lugubrious","陰気な","形容詞","He spoke in a lugubrious tone.","彼は陰気な口調で話した。","ラテン語 lugere（嘆く）から。u が多いので数えて打つ。"],
-  ["obsequious","こびへつらう","形容詞","The waiter was obsequious to rich guests.","給仕は金持ちの客にへつらっていた。","ob + sequ（従う）+ ious。quious の母音連続に注意。"],
-  ["perspicacious","洞察力のある","形容詞","She is a perspicacious critic.","彼女は洞察力のある批評家だ。","per + spic（見る）+ acious。見通す力がある。"],
-  ["serendipity","思いがけない幸運な発見","名詞","Finding this café was pure serendipity.","このカフェを見つけたのはまったくの偶然の幸運だった。","作家ウォルポールが童話『セレンディップの三人の王子』から作った語。"],
-  ["vicissitude","移り変わり・浮き沈み","名詞","the vicissitudes of life","人生の浮き沈み","vici（交替）+ ssitude。c は一つ、s は二つ。ふつう複数形で使う。"]
-]}
-};
-
 /* ============ ローマ字変換エンジン ============ */
 const T = {
 'あ':['a'],'い':['i','yi'],'う':['u','wu','whu'],'え':['e'],'お':['o'],
@@ -471,6 +295,7 @@ const store = {
 };
 const DEF = { cat: 'kanji', enMode: 'copy', level: 1, showReading: true, showRomaji: true, showMeaning: true, showHint: true, count: 10 };
 let S = Object.assign({}, DEF, store.get('dojo.settings', {}));
+if (![10,20,30,50].includes(S.count)) S.count = 10;
 let G = null;          // 進行中のゲーム
 let screen = 'setup';
 let tick = null;
@@ -504,8 +329,8 @@ function renderSetup() {
   } else {
     o += sw('optHint', 'ヒント', '頭文字と文字数を表示します', S.showHint);
   }
-  o += `<div class="opt"><label>問題数<span>レベルごとに15問から出題</span></label>
-    <div class="count">${[5,10,15].map(n => `<button type="button" data-count="${n}" aria-pressed="${S.count === n}">${n}</button>`).join('')}</div></div>`;
+  o += `<div class="opt"><label>問題数<span>各レベル50問から出題（50は全問）</span></label>
+    <div class="count">${[10,20,30,50].map(n => `<button type="button" data-count="${n}" aria-pressed="${S.count === n}">${n}</button>`).join('')}</div></div>`;
   $('opts').innerHTML = o;
   const best = store.get('dojo.best', {})[modeKey() + '-' + S.level];
   $('bestLine').textContent = best ? `自己ベスト：ランク ${best.rank} ／ ${best.kpm} 打鍵/分 ／ 正確率 ${best.acc}%` : 'このレベルの記録はまだありません';
