@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>打鍵道場</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one centered column like a practice sheet — setup → play card with 書写 guide grid → result with explanation cards */
+:root {
+  --bg: #eef0ec;
+  --surface: #f9faf7;
+  --ink: #1b2130;
+  --muted: #5d6576;
+  --line: #d3d7d0;
+  --accent: #2c4a8c;      /* 藍 */
+  --accent-soft: #dfe5f2;
+  --miss: #b93c2a;        /* 朱 */
+  --miss-soft: #f5dfd9;
+  --ok: #2f7150;
+  --grid: rgba(185, 60, 42, .16);
+  --f-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151c; --surface: #1a1f29; --ink: #e6e8ee; --muted: #9aa2b3; --line: #2c3341;
+    --accent: #93abe6; --accent-soft: #232d44; --miss: #f08a72; --miss-soft: #3a2420; --ok: #7fc79f;
+    --grid: rgba(240, 138, 114, .14); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151c; --surface: #1a1f29; --ink: #e6e8ee; --muted: #9aa2b3; --line: #2c3341;
+  --accent: #93abe6; --accent-soft: #232d44; --miss: #f08a72; --miss-soft: #3a2420; --ok: #7fc79f;
+  --grid: rgba(240, 138, 114, .14); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.6; }
+.wrap { max-width: 780px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 56px; display: flex; flex-direction: column; gap: 22px; }
+header.top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { font-family: var(--f-display); font-weight: 800; font-size: 30px; letter-spacing: .08em; margin: 0; }
+.brand small { font-family: var(--f-body); font-weight: 500; font-size: 13px; color: var(--muted); letter-spacing: .04em; margin-left: 10px; }
+.seal { display: inline-grid; place-items: center; width: 34px; height: 34px; border: 2px solid var(--miss); color: var(--miss); border-radius: 4px; font-family: var(--f-display); font-size: 15px; font-weight: 800; line-height: 1; transform: rotate(-4deg); }
+h2 { font-size: 13px; font-weight: 700; letter-spacing: .12em; color: var(--muted); margin: 0; text-transform: uppercase; }
+section.panel { display: flex; flex-direction: column; gap: 10px; }
+.seg { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.seg button { font: inherit; border: 0; background: transparent; color: var(--ink); padding: 12px 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: 0; }
+.seg button b { font-size: 16px; }
+.seg button span { font-size: 12px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.seg button[aria-pressed="true"] span { color: var(--surface); opacity: .85; }
+.levels { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.lv { font: inherit; text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 10px 10px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.lv .n { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.lv .t { font-weight: 700; font-size: 13px; line-height: 1.35; }
+.lv .s { font-family: var(--f-display); font-size: 18px; color: var(--accent); overflow-wrap: anywhere; }
+.lv.en .s { font-family: var(--f-mono); font-size: 13px; }
+.lv[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-soft); }
+.pips { display: flex; gap: 3px; }
+.pips i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.pips i.on { background: var(--miss); }
+.opts { display: flex; flex-direction: column; gap: 2px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 4px 14px; }
+.opt { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.opt:last-child { border-bottom: 0; }
+.opt label { display: flex; flex-direction: column; cursor: pointer; }
+.opt label span { font-size: 12px; color: var(--muted); }
+.opt.disabled { opacity: .45; }
+.switch { appearance: none; width: 44px; height: 26px; border-radius: 13px; background: var(--line); position: relative; cursor: pointer; flex: none; transition: background .15s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); transition: transform .15s; }
+.switch:checked { background: var(--accent); }
+.switch:checked::after { transform: translateX(18px); }
+.count { display: flex; gap: 6px; }
+.count button { font: inherit; font-family: var(--f-mono); border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 8px; padding: 4px 12px; cursor: pointer; }
+.count button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.startrow { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.btn { font: inherit; font-weight: 700; border: 0; border-radius: 10px; padding: 14px 28px; cursor: pointer; background: var(--accent); color: var(--surface); font-size: 16px; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); font-weight: 500; padding: 10px 18px; font-size: 14px; }
+.btn kbd { font-family: var(--f-mono); font-size: 11px; opacity: .75; margin-left: 6px; }
+.best { color: var(--muted); font-size: 13px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* play */
+.hud { display: flex; gap: 18px; flex-wrap: wrap; align-items: baseline; font-variant-numeric: tabular-nums; }
+.hud div { display: flex; flex-direction: column; }
+.hud small { font-size: 11px; letter-spacing: .1em; color: var(--muted); }
+.hud b { font-family: var(--f-mono); font-size: 20px; font-weight: 600; }
+.hud .tag { margin-left: auto; font-size: 13px; color: var(--muted); align-self: center; }
+.bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .25s; }
+.card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 36px 20px 28px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; min-height: 300px; justify-content: center; cursor: text; }
+.card.kanji { background-image:
+  linear-gradient(var(--grid), var(--grid)), linear-gradient(var(--grid), var(--grid));
+  background-size: 1px 100%, 100% 1px; background-position: center, center; background-repeat: no-repeat; }
+.card.shake { animation: shake .22s; }
+.card.flash { box-shadow: 0 0 0 2px var(--miss); }
+@keyframes shake { 25% { transform: translateX(-5px);} 75% { transform: translateX(5px);} }
+.q { font-family: var(--f-display); font-weight: 800; font-size: clamp(44px, 12vw, 84px); line-height: 1.15; letter-spacing: .06em; background: var(--surface); padding: 0 12px; overflow-wrap: anywhere; }
+.q.en { font-family: var(--f-mono); font-weight: 600; font-size: clamp(30px, 8vw, 54px); letter-spacing: .02em; }
+.q.ja { font-family: var(--f-display); font-size: clamp(28px, 7vw, 44px); letter-spacing: .02em; }
+.kana { font-size: 22px; letter-spacing: .12em; background: var(--surface); padding: 0 8px; }
+.kana .d { color: var(--accent); }
+.kana .r { color: var(--muted); }
+.roma, .typed { font-family: var(--f-mono); font-size: 20px; letter-spacing: .04em; background: var(--surface); padding: 0 8px; overflow-wrap: anywhere; max-width: 100%; }
+.roma .d { color: var(--accent); }
+.roma .r { color: var(--muted); }
+.roma .c { text-decoration: underline; text-underline-offset: 5px; text-decoration-color: var(--miss); color: var(--ink); }
+.q.en .d { color: var(--accent); }
+.q.en .r { color: var(--ink); }
+.q.en .c { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 8px; text-decoration-color: var(--miss); }
+.slots { font-family: var(--f-mono); font-size: clamp(24px, 6.5vw, 38px); letter-spacing: .25em; overflow-wrap: anywhere; }
+.slots .d { color: var(--accent); }
+.slots .h { color: var(--muted); }
+.meaning { color: var(--muted); font-size: 15px; background: var(--surface); padding: 0 8px; }
+.reveal { color: var(--miss); font-weight: 700; }
+.ime { color: var(--miss); font-size: 13px; }
+.playfoot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; color: var(--muted); font-size: 13px; align-items: center; }
+#sink { position: absolute; opacity: 0; width: 1px; height: 1px; left: 50%; top: 50%; border: 0; padding: 0; font-size: 16px; }
+.countdown { font-family: var(--f-display); font-size: 96px; font-weight: 800; color: var(--accent); }
+
+/* result */
+.rank { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.rank .big { font-family: var(--f-display); font-weight: 800; font-size: 88px; line-height: 1; color: var(--miss); width: 96px; height: 96px; display: grid; place-items: center; border: 3px solid var(--miss); border-radius: 8px; transform: rotate(-4deg); flex: none; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px 20px; flex: 1; min-width: 0; font-variant-numeric: tabular-nums; }
+.stats div { display: flex; flex-direction: column; border-top: 1px solid var(--line); padding-top: 6px; }
+.stats small { font-size: 11px; letter-spacing: .1em; color: var(--muted); }
+.stats b { font-family: var(--f-mono); font-size: 22px; font-weight: 600; }
+.newbest { color: var(--ok); font-weight: 700; font-size: 13px; }
+.mlist { display: flex; flex-direction: column; gap: 12px; }
+.mcard { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.mhead { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.mhead .w { font-family: var(--f-display); font-weight: 800; font-size: 30px; line-height: 1.2; }
+.mhead .w.en { font-family: var(--f-mono); font-size: 24px; font-weight: 600; }
+.mhead .rd { font-size: 16px; color: var(--accent); }
+.mhead .pos { font-size: 12px; border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; color: var(--muted); }
+.mmean { font-weight: 700; }
+.mnote { color: var(--ink); }
+.mex { font-family: var(--f-mono); font-size: 14px; color: var(--ink); border-left: 2px solid var(--line); padding-left: 10px; }
+.mex span { display: block; font-family: var(--f-body); color: var(--muted); font-size: 13px; }
+.myerr { font-size: 13px; color: var(--miss); background: var(--miss-soft); border-radius: 6px; padding: 4px 10px; justify-self: start; }
+.perfect { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 22px; text-align: center; color: var(--ok); font-weight: 700; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.okrow { color: var(--muted); font-size: 13px; }
+.okrow span { display: inline-block; margin-right: 10px; }
+
+@media (max-width: 640px) {
+  .levels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .levels .lv:last-child { grid-column: 1 / -1; }
+  .rank .big { width: 76px; height: 76px; font-size: 64px; }
+}
+@media (prefers-reduced-motion: reduce) { .card.shake { animation: none; } .bar i, .switch, .switch::after { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <h1 class="brand">打鍵道場<small>漢字と英単語のタイピング</small></h1>
+    <span class="seal" aria-hidden="true">打</span>
+  </header>
+
+  <!-- SETUP -->
+  <div id="setup" style="display:flex;flex-direction:column;gap:22px">
+    <section class="panel">
+      <h2>種目</h2>
+      <div class="seg" id="catSeg">
+        <button type="button" data-cat="kanji"><b>漢字</b><span>読みをローマ字で打つ</span></button>
+        <button type="button" data-cat="en"><b>英語</b><span>英単語を打つ</span></button>
+      </div>
+      <div class="seg" id="enSeg">
+        <button type="button" data-en="copy"><b>英単語の入力</b><span>表示された英単語を打つ</span></button>
+        <button type="button" data-en="meaning"><b>英単語の意味</b><span>日本語の意味から英単語を打つ</span></button>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>レベル</h2>
+      <div class="levels" id="levels"></div>
+    </section>
+    <section class="panel">
+      <h2>設定</h2>
+      <div class="opts" id="opts"></div>
+    </section>
+    <div class="startrow">
+      <button class="btn" id="startBtn" type="button">はじめる<kbd>Enter</kbd></button>
+      <span class="best" id="bestLine"></span>
+    </div>
+  </div>
+
+  <!-- PLAY -->
+  <div id="play" hidden style="flex-direction:column;gap:14px">
+    <div class="hud">
+      <div><small>問題</small><b id="hProg">1/10</b></div>
+      <div><small>ミス</small><b id="hMiss">0</b></div>
+      <div><small>時間</small><b id="hTime">0.0</b></div>
+      <div><small>打鍵/分</small><b id="hKpm">0</b></div>
+      <span class="tag" id="hTag"></span>
+    </div>
+    <div class="bar"><i id="hBar"></i></div>
+    <div class="card" id="card">
+      <input id="sink" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="latin" aria-label="入力">
+      <div id="stage"></div>
+    </div>
+    <div class="playfoot">
+      <span id="footHint">全角・半角どちらのままでも入力できます</span>
+      <div class="actions">
+        <button class="btn ghost" id="skipBtn" type="button">わからない<kbd>Esc</kbd></button>
+        <button class="btn ghost" id="quitBtn" type="button">やめる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result" hidden style="flex-direction:column;gap:22px"></div>
+</div>
+
+<script>
+/* ============ 問題データ ============ */
+const KANJI = {
+1: { t: "小学〜中学", sample: "図書館", list: [
+  ["学校","がっこう","児童・生徒が勉強する所","「学」は小1で習う字。「がくこう」ではなく促音になって「がっこう」と読む。"],
+  ["友達","ともだち","親しくつきあう人","「達」は複数を表す接尾語だったが、今は一人でも「友達」と言う。"],
+  ["天気","てんき","空の様子・晴れや雨などの状態","「天」はそら、「気」は空気のこと。「天気がいい」は晴れを指す。"],
+  ["図書館","としょかん","本や資料を集めて貸し出す施設","「図」は「ず」だけでなく「と」とも読む（図書・意図）。"],
+  ["自転車","じてんしゃ","ペダルをこいで走る二輪車","自ら（自）回転する（転）車、という成り立ち。"],
+  ["野菜","やさい","食用にする草や植物","「菜」は小4で習う。訓読みは「な」（菜の花）。"],
+  ["宿題","しゅくだい","家でやるように出される課題","「宿」には「前から持ち越している」という意味がある。「しゅく」の入力は shu / syu どちらでもよい。"],
+  ["電車","でんしゃ","電気の力で線路を走る車両","「しゃ」は sha / sya のどちらでも入力できる。"],
+  ["運動会","うんどうかい","学校などで行う体育の行事","「ん」の後に母音以外が続くときは n 一つでも入力できる（u n d o …）。"],
+  ["季節","きせつ","春夏秋冬などの時期の区切り","「季」は「禾（のぎへん）」に「子」。「委」と形が似ているので注意。"],
+  ["新聞","しんぶん","ニュースを伝える定期刊行物","「聞」は門の中に耳。「問」（門＋口）と書き分ける。"],
+  ["動物","どうぶつ","自分で動き回る生き物","「物」は「もつ・ぶつ・もの」と読み方が多い字。"],
+  ["料理","りょうり","食べ物をこしらえること","「りょ」は ryo と打つ。「りよ」と分けないこと。"],
+  ["時計","とけい","時刻を示す機械","「時」を「と」と読む特別な読み方（熟字訓）。"],
+  ["誕生日","たんじょうび","生まれた日","「誕」は小6で習う字。「延」と形が似ているので注意。"]
+]},
+2: { t: "中学〜高校基礎", sample: "矛盾", list: [
+  ["環境","かんきょう","人や生物をとりまく周囲の状態","「環」は輪のこと。「還（かえる）」と書き間違えやすい。"],
+  ["努力","どりょく","目標に向けて力を尽くすこと","「努」は「つと（める）」。下が「力」なら努、「心」なら怒（いかる）なので書き分ける。"],
+  ["経験","けいけん","実際に見たりしたりすること","「験」は馬へん。「険（けわしい）」「検（しらべる）」と使い分ける。"],
+  ["貿易","ぼうえき","外国と商品を売り買いすること","「易」は「えき（交換する）」と「い（やさしい）」の二つの読みがある。"],
+  ["憲法","けんぽう","国の基本となる最高法規","「法」は前に「ん」が付くと「ぽう」と半濁音になる。"],
+  ["傾向","けいこう","物事がある方向にかたむくこと","「傾」は「かたむ（く）」。人が頭を傾ける形から。"],
+  ["継続","けいぞく","前から続けていること","「継」も「続」も糸へん。糸をつなぐイメージ。"],
+  ["証拠","しょうこ","事実を明らかにするよりどころ","「拠」は「よりどころ」の意味。「根拠」「拠点」も同じ字。"],
+  ["偶然","ぐうぜん","思いがけずそうなること","対義語は「必然」。「遇（あう）」と書き間違えやすい。"],
+  ["犠牲","ぎせい","目的のために大切なものを失うこと","どちらも牛へん。もとは神にささげる生きた動物の意味。"],
+  ["抵抗","ていこう","外からの力に逆らうこと","「抵」も「抗」も手へん。「低」「坑」と混同しない。"],
+  ["矛盾","むじゅん","つじつまが合わないこと","何でも突く矛と何も通さない盾を売った商人の故事（『韓非子』）から。"],
+  ["挨拶","あいさつ","人に会ったときなどの礼儀の言葉","もとは禅の言葉で、問答で相手の力量を試すこと。両方とも手へん。"],
+  ["曖昧","あいまい","はっきりしないこと","どちらも日へん。日がかげってぼんやりした様子から。"],
+  ["依頼","いらい","人に用事を頼むこと","「依」は「よる・たよる」。「依存（いぞん）」も同じ字。"]
+]},
+3: { t: "高校〜一般", sample: "葛藤", list: [
+  ["把握","はあく","しっかり理解すること","もとは手でしっかりつかむ意味。「握」は「にぎ（る）」。"],
+  ["妥協","だきょう","対立する者が互いに譲り合うこと","「妥」は「おだやか・ほどよい」の意味。「妥当」も同じ字。"],
+  ["葛藤","かっとう","心の中で迷い苦しむこと","葛（くず）と藤（ふじ）のつるがもつれ合う様子から。"],
+  ["顕著","けんちょ","際立って目につくこと","「顕」は「あらわ（れる）」。「著」も「いちじる（しい）」と読む。"],
+  ["措置","そち","問題に対して必要な手続きを取ること","「措」は「おく・処理する」。「借（かりる）」と書き間違えやすい。"],
+  ["懸念","けねん","気にかかって不安に思うこと","「懸」は普通「けん」だが、この語では「け」と読む。"],
+  ["示唆","しさ","それとなく知らせること","「唆」は「そそのか（す）」。「教唆（きょうさ）」も同じ字。"],
+  ["該当","がいとう","条件などにあてはまること","「該」は「その・あてはまる」の意。「核」と形が似ている。"],
+  ["逸脱","いつだつ","本来の筋道からそれること","「逸」は「そ（れる）」。「逸話」「秀逸」でも使う。"],
+  ["遂行","すいこう","任務などを最後までやりとげること","「遂」は「と（げる）」。「すいぎょう」ではなく「すいこう」。"],
+  ["拮抗","きっこう","力がほぼ同じで張り合うこと","「拮」は「しめつける」の意。促音「きっ」は kki と子音を重ねる。"],
+  ["払拭","ふっしょく","すっかり取り除くこと","「拭」は「ふ（く）・ぬぐ（う）」。「ふっしき」は誤読。"],
+  ["恣意的","しいてき","思うままで筋が通らないさま","「恣」は「ほしいまま」。「意図的」とは意味が違うので注意。"],
+  ["踏襲","とうしゅう","前のやり方をそのまま受け継ぐこと","「襲」は「おそ（う）」のほか「受け継ぐ」の意味がある（世襲）。"],
+  ["脆弱","ぜいじゃく","もろくて弱いこと","「脆」は「もろ（い）」。「きじゃく」は誤読。"]
+]},
+4: { t: "教養・難読", sample: "齟齬", list: [
+  ["齟齬","そご","食い違って合わないこと","上下の歯がかみ合わない様子から。どちらも歯へん。"],
+  ["杞憂","きゆう","無用な心配","杞の国の人が天が落ちてこないか心配した故事（『列子』）から。"],
+  ["逼迫","ひっぱく","行き詰まって余裕がないこと","「逼」も「迫」も「せまる」。財政や需給の場面でよく使う。"],
+  ["忖度","そんたく","他人の心をおしはかること","「忖」も「度」も「はかる」。近年は「上の意向をくむ」意味で使われがち。"],
+  ["揶揄","やゆ","からかうこと","どちらも手へん。「からかう」の硬い言い方。"],
+  ["憔悴","しょうすい","心配や疲れでやつれること","どちらも心（りっしんべん）が付く。「しょうそつ」は誤読。"],
+  ["慟哭","どうこく","声をあげて激しく泣くこと","「慟」は身を震わせて悲しむ、「哭」は声をあげて泣く。"],
+  ["斟酌","しんしゃく","相手の事情をくみ取って手加減すること","どちらも「くむ（酒などをすくう）」の意味から。"],
+  ["瓦解","がかい","組織などが一部から崩れて全体が壊れること","屋根瓦の一枚が落ちると次々に崩れる様子から。"],
+  ["嚆矢","こうし","物事のはじまり","昔の中国で開戦の合図に鳴りかぶら矢（嚆矢）を射たことから。"],
+  ["蹂躙","じゅうりん","踏みにじること","どちらも足へん。「じゅう」は ju / zyu / jyu で入力できる。"],
+  ["贔屓","ひいき","気に入った者を特別に引き立てること","「贔」は貝が三つで「力を入れる」の意。"],
+  ["呂律","ろれつ","ものを言うときの調子","雅楽の音階「呂」と「律」が合わないことから「呂律が回らない」と言う。"],
+  ["頓挫","とんざ","計画などが途中で行き詰まること","「頓」は「つまずく」、「挫」は「くじ（く）」。"],
+  ["辟易","へきえき","うんざりして嫌になること","もとは「相手の勢いに道をあけて退く」意味。「易」を「えき」と読む。"]
+]},
+5: { t: "超難読・熟字訓", sample: "魑魅魍魎", list: [
+  ["魑魅魍魎","ちみもうりょう","さまざまな化け物","「魑魅」は山の化け物、「魍魎」は川の化け物。全部「鬼」が付く。"],
+  ["躊躇","ちゅうちょ","決心がつかずためらうこと","どちらも足へん。足が進まない様子から。"],
+  ["薔薇","ばら","とげのある木に咲く花","漢字検定1級レベルの難字。音読みは「しょうび・そうび」。"],
+  ["鬱蒼","うっそう","木が茂って薄暗いさま","「鬱」は29画。促音「うっ」は sso と子音を重ねる。"],
+  ["檸檬","れもん","かんきつ類の果物","外来語に漢字を当てた語。梶井基次郎の小説の題名でも有名。"],
+  ["蒲公英","たんぽぽ","春に黄色い花を咲かせる草","漢名をそのまま日本語の名前で読む熟字訓。"],
+  ["紫陽花","あじさい","梅雨の頃に咲く花","中国の詩人・白居易が別の花に付けた名前が当てられたとされる。"],
+  ["海月","くらげ","海に漂うゼラチン質の生き物","海に浮かぶ月のような姿から。「水母」とも書く。"],
+  ["秋刀魚","さんま","秋に旬を迎える細長い魚","秋にとれる、刀のような形の魚という当て字。"],
+  ["啄木鳥","きつつき","木をつついて虫を捕る鳥","「啄」は「ついばむ」。石川啄木の号もこの字から。"],
+  ["欠伸","あくび","眠いときに出る大きな呼吸","「欠」はもともと口を開けて息をする人の形。"],
+  ["東雲","しののめ","夜明け方","東の空が明るくなる頃の雲、という意味の熟字訓。"],
+  ["十六夜","いざよい","陰暦十六日の夜（の月）","満月の翌夜、月の出が少し遅れて「いさよう（ためらう）」ことから。"],
+  ["蝸牛","かたつむり","殻を背負った陸の巻き貝","音読みは「かぎゅう」。角を出す姿を牛に見立てた。"],
+  ["百足","むかで","たくさんの足を持つ節足動物","足が多いことを「百」で表した当て字。"]
+]}
+};
+
+const ENG = {
+1: { t: "中学", sample: "library", list: [
+  ["friend","友達","名詞","She is my best friend.","彼女は私の一番の友達だ。","ie の順番に注意。「フレンド」の音につられて frend と書きがち。"],
+  ["school","学校","名詞","I walk to school every day.","私は毎日歩いて学校へ行く。","sch の h を忘れやすい。発音しない h がある。"],
+  ["library","図書館","名詞","I borrowed this book from the library.","この本は図書館で借りた。","libr の r を落として libary としやすい。"],
+  ["beautiful","美しい","形容詞","What a beautiful sunset!","なんて美しい夕日だろう。","beau の eau が難所。beauty + ful で y が i に変わる。"],
+  ["important","大切な","形容詞","Sleep is important for your health.","睡眠は健康にとって大切だ。","im + port + ant。portant の t を落とさない。"],
+  ["morning","朝","名詞","I drink milk every morning.","毎朝牛乳を飲む。","mor + ning。n が二つ入る。"],
+  ["mountain","山","名詞","We climbed a high mountain.","私たちは高い山に登った。","語尾は -tain。-tin や -ten ではない。"],
+  ["breakfast","朝食","名詞","I had toast for breakfast.","朝食にトーストを食べた。","break（破る）+ fast（断食）。夜の断食を破る食事が語源。"],
+  ["family","家族","名詞","There are four people in my family.","私の家族は4人です。","famil + y。l は一つ。"],
+  ["weather","天気","名詞","The weather is nice today.","今日は天気がいい。","同じ発音の whether（〜かどうか）と区別する。ea の綴り。"],
+  ["question","質問","名詞","May I ask a question?","質問してもいいですか。","qu の後に e。ques + tion。"],
+  ["together","一緒に","副詞","Let's go together.","一緒に行こう。","to + get + her と三つに分けると覚えやすい。"],
+  ["different","違う","形容詞","Your idea is different from mine.","君の考えは私のと違う。","f が二つ。diff + er + ent。"],
+  ["remember","覚えている","動詞","I remember his name.","彼の名前を覚えている。","re + member。m が二回出てくる。"],
+  ["believe","信じる","動詞","I believe you.","君を信じる。","「i before e」の規則どおり ie。中に lie（うそ）が入ると覚える。"]
+]},
+2: { t: "高校基礎", sample: "experience", list: [
+  ["environment","環境","名詞","We need to protect the environment.","私たちは環境を守る必要がある。","environ + ment。n を落として enviroment と書くミスが多い。"],
+  ["government","政府","名詞","The government announced a new plan.","政府は新しい計画を発表した。","govern（統治する）+ ment。こちらも n を落としやすい。"],
+  ["experience","経験","名詞","She has a lot of experience in teaching.","彼女は教える経験が豊富だ。","ex + peri + ence。-ance ではなく -ence。"],
+  ["opportunity","機会","名詞","This is a great opportunity to learn.","これは学ぶための絶好の機会だ。","p が二つ。op + port + unity。"],
+  ["necessary","必要な","形容詞","Water is necessary for life.","水は生命に必要だ。","c は一つ、s は二つ（one collar, two sleeves と覚える）。"],
+  ["communicate","伝え合う","動詞","We communicate by email.","私たちはメールで連絡を取り合う。","m が二つ。common（共通の）と同じ語源。"],
+  ["influence","影響","名詞","Music had a big influence on him.","音楽は彼に大きな影響を与えた。","in + flu（流れ込む）+ ence。"],
+  ["recognize","認識する","動詞","I didn't recognize her at first.","最初は彼女だと気づかなかった。","re + cogn + ize。g を忘れやすい。"],
+  ["available","利用できる","形容詞","Tickets are available online.","チケットはオンラインで手に入る。","avail + able。ai の後に l が一つ。"],
+  ["decision","決定","名詞","It was a difficult decision.","それは難しい決断だった。","decide の名詞形。d が s に変わり -sion になる。"],
+  ["knowledge","知識","名詞","Knowledge is power.","知識は力なり。","最初の k は発音しない。know + ledge で d を忘れない。"],
+  ["temperature","温度","名詞","The temperature dropped below zero.","気温が氷点下に下がった。","temper + ature。真ん中の er を落としやすい。"],
+  ["achieve","達成する","動詞","She achieved her goal.","彼女は目標を達成した。","ie の順番。chief（長）と同じ ie。"],
+  ["consider","よく考える","動詞","Please consider my proposal.","私の提案を検討してください。","con + sider。s は一つ。"],
+  ["society","社会","名詞","We live in a modern society.","私たちは現代社会に生きている。","social と同じ語源。ie の順番に注意。"]
+]},
+3: { t: "大学受験", sample: "phenomenon", list: [
+  ["ambiguous","あいまいな","形容詞","His answer was ambiguous.","彼の答えはあいまいだった。","ambi（両方）+ guous。どちらにも取れる、が語源。"],
+  ["sufficient","十分な","形容詞","We have sufficient food for a week.","1週間分の十分な食料がある。","f が二つ。-cient の綴りは efficient と同じ。"],
+  ["phenomenon","現象","名詞","Rainbows are a natural phenomenon.","虹は自然現象だ。","ph で f の音。複数形は phenomena。"],
+  ["inevitable","避けられない","形容詞","Change is inevitable.","変化は避けられない。","in（否定）+ evit（避ける）+ able。"],
+  ["contemporary","現代の","形容詞","She studies contemporary art.","彼女は現代美術を研究している。","con（共に）+ tempor（時）+ ary。"],
+  ["substantial","かなりの・相当な","形容詞","There was a substantial increase in sales.","売上がかなり増えた。","substance（実質）の形容詞形。-tial で終わる。"],
+  ["comprehensive","包括的な","形容詞","We need a comprehensive plan.","包括的な計画が必要だ。","comprehend（理解する）とは意味がずれるので注意。h を忘れない。"],
+  ["hypothesis","仮説","名詞","The data support the hypothesis.","データはその仮説を支持している。","hypo（下に）+ thesis（置く）。y の位置に注意。"],
+  ["deteriorate","悪化する","動詞","His health began to deteriorate.","彼の健康は悪化し始めた。","deter + ior + ate。真ん中の ior を落としやすい。"],
+  ["accommodate","収容する・適応させる","動詞","The hotel can accommodate 200 guests.","そのホテルは200人収容できる。","c も m も二つずつ。最頻出のスペルミス語の一つ。"],
+  ["legitimate","正当な","形容詞","That is a legitimate concern.","それは正当な懸念だ。","legi（法）+ timate。-mate で終わる。"],
+  ["perceive","知覚する・気づく","動詞","I perceived a change in his voice.","彼の声の変化に気づいた。","c の後は ei（receive と同じ型）。"],
+  ["consequence","結果・影響","名詞","You must accept the consequences.","結果は受け入れなければならない。","con + sequ（続く）+ ence。sequence を含む。"],
+  ["vulnerable","傷つきやすい","形容詞","Children are vulnerable to the cold.","子どもは寒さに弱い。","vulner（傷）+ able。n を忘れて vulerable としやすい。"],
+  ["unprecedented","前例のない","形容詞","This is an unprecedented situation.","これは前例のない事態だ。","un + precedent（前例）+ ed。e の数を数えて打つ。"]
+]},
+4: { t: "英検準1級", sample: "ubiquitous", list: [
+  ["meticulous","細心の注意を払った","形容詞","He is meticulous about details.","彼は細部まで細心の注意を払う。","ラテン語の metus（恐れ）から。失敗を恐れるほど慎重、のイメージ。"],
+  ["ubiquitous","どこにでもある","形容詞","Smartphones are ubiquitous today.","今やスマートフォンはどこにでもある。","ubique（いたる所に）から。qu の後に i。"],
+  ["scrutinize","綿密に調べる","動詞","The editor scrutinized the report.","編集者は報告書を綿密に調べた。","scrutiny（精査）の動詞形。scru + tin + ize。"],
+  ["pragmatic","実用的な","形容詞","We need a pragmatic approach.","実際的な取り組みが必要だ。","practical に近い。理想より実際の結果を重視するさま。"],
+  ["resilient","回復力のある","形容詞","Kids are remarkably resilient.","子どもは驚くほど立ち直りが早い。","re（後ろへ）+ sili（跳ねる）+ ent。"],
+  ["eloquent","雄弁な","形容詞","She gave an eloquent speech.","彼女は雄弁なスピーチをした。","e（外へ）+ loqu（話す）+ ent。"],
+  ["alleviate","和らげる","動詞","This medicine alleviates pain.","この薬は痛みを和らげる。","l が二つ。lev（軽くする）が入っている。"],
+  ["ostensibly","表向きは","副詞","He was ostensibly on vacation.","彼は表向きは休暇中だった。","ostens（見せる）+ ibly。-ably ではなく -ibly。"],
+  ["conspicuous","目立つ","形容詞","She wore a conspicuous red hat.","彼女は目立つ赤い帽子をかぶっていた。","con + spic（見る）+ uous。inconspicuous は反対の意味。"],
+  ["procrastinate","先延ばしにする","動詞","Stop procrastinating and start now.","先延ばしをやめて今始めなさい。","pro（前へ）+ crastin（明日の）。明日へ回す、が語源。"],
+  ["exacerbate","悪化させる","動詞","Stress can exacerbate the illness.","ストレスは病気を悪化させうる。","ex + acerb（苦い・厳しい）+ ate。c と b の位置に注意。"],
+  ["benevolent","慈悲深い","形容詞","He was a benevolent ruler.","彼は慈悲深い統治者だった。","bene（よい）+ vol（意志）+ ent。反対は malevolent。"],
+  ["tenacious","粘り強い","形容詞","She is tenacious in her research.","彼女は粘り強く研究する。","ten（保つ）+ acious。つかんだら放さないイメージ。"],
+  ["plausible","もっともらしい","形容詞","His excuse sounded plausible.","彼の言い訳はもっともらしく聞こえた。","-able ではなく -ible。applaud（拍手する）と同語源。"],
+  ["superfluous","余分な","形容詞","Remove any superfluous words.","余分な言葉は削りなさい。","super（上に）+ flu（流れる）+ ous。あふれ出るほど余分。"]
+]},
+5: { t: "英検1級", sample: "ephemeral", list: [
+  ["ephemeral","はかない","形容詞","Fame is often ephemeral.","名声はしばしばはかない。","ギリシャ語 ephemeros（一日だけの）から。ph で f の音。"],
+  ["sycophant","おべっか使い","名詞","The king was surrounded by sycophants.","王はおべっか使いに囲まれていた。","sy の y と、語尾の phant に注意。"],
+  ["obfuscate","わかりにくくする","動詞","Don't obfuscate the issue.","問題をわかりにくくするな。","ob + fusc（暗い）+ ate。"],
+  ["quintessential","典型的な","形容詞","It is a quintessential English village.","典型的なイギリスの村だ。","quint（五番目）+ essence。第五元素＝本質が語源。s が二つ。"],
+  ["perfunctory","おざなりの","形容詞","He gave a perfunctory nod.","彼はおざなりにうなずいた。","per（通して）+ function。ただ済ませるだけ、の意。"],
+  ["magnanimous","寛大な","形容詞","She was magnanimous in victory.","彼女は勝っても寛大だった。","magn（大きい）+ anim（心）+ ous。"],
+  ["recalcitrant","反抗的な","形容詞","The recalcitrant child refused to eat.","反抗的な子どもは食べるのを拒んだ。","re + calc（かかと）。かかとで蹴り返す、が語源。"],
+  ["idiosyncrasy","特異性・くせ","名詞","Everyone has their own idiosyncrasies.","誰にでもその人なりのくせがある。","語尾は -cy ではなく -sy。idio（独自の）+ syn + crasy。"],
+  ["surreptitious","こっそりした","形容詞","He took a surreptitious glance.","彼はこっそり盗み見た。","r が二つ、t は二回。sur + rept（つかむ）+ itious。"],
+  ["cacophony","耳障りな音","名詞","A cacophony of horns filled the street.","クラクションの騒音が通りに満ちた。","caco（悪い）+ phony（音）。反対は euphony。"],
+  ["lugubrious","陰気な","形容詞","He spoke in a lugubrious tone.","彼は陰気な口調で話した。","ラテン語 lugere（嘆く）から。u が多いので数えて打つ。"],
+  ["obsequious","こびへつらう","形容詞","The waiter was obsequious to rich guests.","給仕は金持ちの客にへつらっていた。","ob + sequ（従う）+ ious。quious の母音連続に注意。"],
+  ["perspicacious","洞察力のある","形容詞","She is a perspicacious critic.","彼女は洞察力のある批評家だ。","per + spic（見る）+ acious。見通す力がある。"],
+  ["serendipity","思いがけない幸運な発見","名詞","Finding this café was pure serendipity.","このカフェを見つけたのはまったくの偶然の幸運だった。","作家ウォルポールが童話『セレンディップの三人の王子』から作った語。"],
+  ["vicissitude","移り変わり・浮き沈み","名詞","the vicissitudes of life","人生の浮き沈み","vici（交替）+ ssitude。c は一つ、s は二つ。ふつう複数形で使う。"]
+]}
+};
+
+/* ============ ローマ字変換エンジン ============ */
+const T = {
+'あ':['a'],'い':['i','yi'],'う':['u','wu','whu'],'え':['e'],'お':['o'],
+'か':['ka','ca'],'き':['ki'],'く':['ku','cu','qu'],'け':['ke'],'こ':['ko','co'],
+'さ':['sa'],'し':['shi','si','ci'],'す':['su'],'せ':['se','ce'],'そ':['so'],
+'た':['ta'],'ち':['chi','ti'],'つ':['tsu','tu'],'て':['te'],'と':['to'],
+'な':['na'],'に':['ni'],'ぬ':['nu'],'ね':['ne'],'の':['no'],
+'は':['ha'],'ひ':['hi'],'ふ':['fu','hu'],'へ':['he'],'ほ':['ho'],
+'ま':['ma'],'み':['mi'],'む':['mu'],'め':['me'],'も':['mo'],
+'や':['ya'],'ゆ':['yu'],'よ':['yo'],
+'ら':['ra'],'り':['ri'],'る':['ru'],'れ':['re'],'ろ':['ro'],
+'わ':['wa'],'を':['wo'],
+'が':['ga'],'ぎ':['gi'],'ぐ':['gu'],'げ':['ge'],'ご':['go'],
+'ざ':['za'],'じ':['ji','zi'],'ず':['zu'],'ぜ':['ze'],'ぞ':['zo'],
+'だ':['da'],'ぢ':['di'],'づ':['du'],'で':['de'],'ど':['do'],
+'ば':['ba'],'び':['bi'],'ぶ':['bu'],'べ':['be'],'ぼ':['bo'],
+'ぱ':['pa'],'ぴ':['pi'],'ぷ':['pu'],'ぺ':['pe'],'ぽ':['po'],
+'ぁ':['xa','la'],'ぃ':['xi','li'],'ぅ':['xu','lu'],'ぇ':['xe','le'],'ぉ':['xo','lo'],
+'ゃ':['xya','lya'],'ゅ':['xyu','lyu'],'ょ':['xyo','lyo'],
+'っ':['xtu','ltu','xtsu','ltsu'],'ー':['-'],'ゔ':['vu']
+};
+const YO = {};
+(function () {
+  const V = { 'ゃ':'a','ゅ':'u','ょ':'o','ぃ':'i','ぇ':'e' };
+  const rows = { 'き':['ky'],'ぎ':['gy'],'に':['ny'],'ひ':['hy'],'び':['by'],'ぴ':['py'],'み':['my'],'り':['ry'],
+                 'し':['sh','sy'],'ち':['ch','ty','cy'],'じ':['j','zy','jy'],'ぢ':['dy'] };
+  for (const k in rows) for (const s in V) {
+    let o = rows[k].map(p => p + V[s]);
+    if (k === 'し' && s === 'ぃ') o = ['syi'];
+    if (k === 'ち' && s === 'ぃ') o = ['tyi','cyi'];
+    if (k === 'じ' && s === 'ぃ') o = ['zyi','jyi'];
+    YO[k + s] = o;
+  }
+  Object.assign(YO, { 'ふぁ':['fa'],'ふぃ':['fi'],'ふぇ':['fe'],'ふぉ':['fo'],'てぃ':['thi'],'でぃ':['dhi'],'でゅ':['dhu'],'うぃ':['wi'],'うぇ':['we'] });
+  for (const k in YO) {
+    const a = T[k[0]] || [], b = T[k[1]] || [];
+    for (const x of a) for (const y of b) if (!YO[k].includes(x + y)) YO[k].push(x + y);
+  }
+})();
+
+function tokenize(kana) {
+  let u = [];
+  for (let i = 0; i < kana.length; i++) {
+    const two = kana.slice(i, i + 2);
+    if (YO[two]) { u.push({ k: two, o: YO[two].slice() }); i++; continue; }
+    const c = kana[i];
+    if (c === 'ん') { u.push({ k: c, o: ['nn','xn'], nn: true }); continue; }
+    u.push({ k: c, o: (T[c] || [c]).slice() });
+  }
+  // っ を次の音とまとめる（子音を重ねる / xtu などで単独入力）
+  const m = [];
+  for (let i = 0; i < u.length; i++) {
+    if (u[i].k === 'っ' && u[i + 1] && !u[i + 1].nn) {
+      const nx = u[i + 1], o = [];
+      for (const s of nx.o) if (!/^[aiueon]/.test(s)) { o.push(s[0] + s); if (s.startsWith('ch')) o.push('t' + s); }
+      for (const a of u[i].o) for (const b of nx.o) o.push(a + b);
+      m.push({ k: 'っ' + nx.k, o: [...new Set(o)] }); i++;
+    } else m.push(u[i]);
+  }
+  // 「ん」は次が母音・y・n で始まらなければ n 一つで可
+  for (let i = 0; i < m.length; i++) {
+    if (m[i].nn && m[i + 1] && m[i + 1].o.every(s => !/^[aiueoyn]/.test(s))) m[i].o.unshift('n');
+  }
+  return m;
+}
+
+/* ============ 状態 ============ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const DEF = { cat: 'kanji', enMode: 'copy', level: 1, showReading: true, showRomaji: true, showMeaning: true, showHint: true, count: 10 };
+let S = Object.assign({}, DEF, store.get('dojo.settings', {}));
+let G = null;          // 進行中のゲーム
+let screen = 'setup';
+let tick = null;
+
+function saveSettings() { store.set('dojo.settings', S); }
+function modeKey() { return S.cat === 'kanji' ? 'kanji' : 'en-' + S.enMode; }
+function modeLabel() { return S.cat === 'kanji' ? '漢字' : (S.enMode === 'copy' ? '英単語の入力' : '英単語の意味'); }
+
+/* ============ 設定画面 ============ */
+function renderSetup() {
+  document.querySelectorAll('#catSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.cat === S.cat));
+  document.querySelectorAll('#enSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.en === S.enMode));
+  $('enSeg').hidden = S.cat !== 'en';
+  const src = S.cat === 'kanji' ? KANJI : ENG;
+  $('levels').innerHTML = [1,2,3,4,5].map(n => `
+    <button type="button" class="lv ${S.cat === 'en' ? 'en' : ''}" data-lv="${n}" aria-pressed="${S.level === n}">
+      <span class="n">Lv.${n}</span>
+      <span class="pips">${[1,2,3,4,5].map(i => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</span>
+      <span class="t">${esc(src[n].t)}</span>
+      <span class="s">${esc(src[n].sample)}</span>
+    </button>`).join('');
+  let o = '';
+  const sw = (id, title, sub, on, dis) => `
+    <div class="opt ${dis ? 'disabled' : ''}"><label for="${id}">${title}<span>${sub}</span></label>
+    <input class="switch" type="checkbox" id="${id}" ${on ? 'checked' : ''} ${dis ? 'disabled' : ''}></div>`;
+  if (S.cat === 'kanji') {
+    o += sw('optReading', '読みを表示', 'オフにすると漢字だけを見て読みを打ちます', S.showReading);
+    o += sw('optRomaji', 'ローマ字ガイド', '打つべきローマ字を表示（読み表示がオンのとき）', S.showRomaji, !S.showReading);
+  } else if (S.enMode === 'copy') {
+    o += sw('optMeaning', '意味を表示', '英単語の下に日本語の意味を出します', S.showMeaning);
+  } else {
+    o += sw('optHint', 'ヒント', '頭文字と文字数を表示します', S.showHint);
+  }
+  o += `<div class="opt"><label>問題数<span>レベルごとに15問から出題</span></label>
+    <div class="count">${[5,10,15].map(n => `<button type="button" data-count="${n}" aria-pressed="${S.count === n}">${n}</button>`).join('')}</div></div>`;
+  $('opts').innerHTML = o;
+  const best = store.get('dojo.best', {})[modeKey() + '-' + S.level];
+  $('bestLine').textContent = best ? `自己ベスト：ランク ${best.rank} ／ ${best.kpm} 打鍵/分 ／ 正確率 ${best.acc}%` : 'このレベルの記録はまだありません';
+}
+
+$('catSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.cat = b.dataset.cat; saveSettings(); renderSetup(); });
+$('enSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.enMode = b.dataset.en; saveSettings(); renderSetup(); });
+$('levels').addEventListener('click', e => { const b = e.target.closest('.lv'); if (!b) return; S.level = +b.dataset.lv; saveSettings(); renderSetup(); });
+$('opts').addEventListener('change', e => {
+  const m = { optReading: 'showReading', optRomaji: 'showRomaji', optMeaning: 'showMeaning', optHint: 'showHint' };
+  if (m[e.target.id]) { S[m[e.target.id]] = e.target.checked; saveSettings(); renderSetup(); }
+});
+$('opts').addEventListener('click', e => { const b = e.target.closest('[data-count]'); if (!b) return; S.count = +b.dataset.count; saveSettings(); renderSetup(); });
+$('startBtn').addEventListener('click', () => startGame());
+
+function show(name) {
+  screen = name;
+  $('setup').hidden = name !== 'setup';
+  $('play').hidden = name !== 'play';
+  $('result').hidden = name !== 'result';
+  ['setup','play','result'].forEach(n => $(n).style.display = n === name ? 'flex' : '');
+}
+
+/* ============ ゲーム ============ */
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function makeQ(item) {
+  if (S.cat === 'kanji') {
+    const [w, r, m, n] = item;
+    return { item, w, r, m, n, units: tokenize(r), ui: 0, buf: '', parts: [], miss: 0, missAt: {}, skipped: false };
+  }
+  const [w, m, p, ex, exj, n] = item;
+  return { item, w, m, p, ex, exj, n, pos: 0, miss: 0, missAt: {}, skipped: false };
+}
+
+function startGame(items) {
+  const src = (S.cat === 'kanji' ? KANJI : ENG)[S.level].list;
+  const pick = items || shuffle(src).slice(0, S.count);
+  G = { qs: pick.map(makeQ), qi: 0, ok: 0, miss: 0, t0: 0, t1: 0, lock: true, review: !!items };
+  show('play');
+  $('hTag').textContent = `${modeLabel()} ・ Lv.${S.level}`;
+  $('card').className = 'card' + (S.cat === 'kanji' ? ' kanji' : '');
+  updateHud();
+  let n = 3;
+  const cd = () => {
+    if (screen !== 'play' || !G) return;
+    if (n > 0) { $('stage').innerHTML = `<div class="countdown">${n}</div>`; n--; setTimeout(cd, 550); }
+    else { G.lock = false; G.t0 = performance.now(); renderQ(); clearInterval(tick); tick = setInterval(updateHud, 100); }
+  };
+  cd();
+  focusSink();
+}
+
+// PC では入力欄にフォーカスしない（IME が働かないので全角・半角どちらでも打てる）。スマホだけ隠し入力欄でキーボードを出す。
+const TOUCH = matchMedia('(pointer: coarse)').matches;
+function focusSink() {
+  try {
+    if (TOUCH) $('sink').focus({ preventScroll: true });
+    else if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+  } catch (e) {}
+}
+
+function elapsed() { if (!G || !G.t0) return 0; return ((G.t1 || performance.now()) - G.t0) / 1000; }
+function updateHud() {
+  if (!G) return;
+  const t = elapsed();
+  $('hProg').textContent = `${Math.min(G.qi + 1, G.qs.length)}/${G.qs.length}`;
+  $('hMiss').textContent = G.miss;
+  $('hTime').textContent = t.toFixed(1);
+  $('hKpm').textContent = t > 0.5 ? Math.round(G.ok / t * 60) : 0;
+  $('hBar').style.width = (G.qi / G.qs.length * 100) + '%';
+}
+
+function guideRoma(q) {
+  let done = q.parts.join('') + q.buf;
+  let cur = '', rest = '';
+  const u = q.units[q.ui];
+  if (u) {
+    const c = u.o.find(s => s.startsWith(q.buf)) || u.o[0];
+    const r = c.slice(q.buf.length);
+    cur = r.slice(0, 1); rest = r.slice(1);
+    rest += q.units.slice(q.ui + 1).map(x => x.o[0]).join('');
+  }
+  return { done, cur, rest };
+}
+
+function renderQ(reveal) {
+  const q = G.qs[G.qi];
+  let h = '';
+  if (S.cat === 'kanji') {
+    h += `<div class="q">${esc(q.w)}</div>`;
+    if (S.showReading || reveal) {
+      const dk = q.units.slice(0, q.ui).map(u => u.k).join('');
+      const rk = q.units.slice(q.ui).map(u => u.k).join('');
+      h += `<div class="kana ${reveal ? 'reveal' : ''}"><span class="d">${esc(dk)}</span><span class="r">${esc(rk)}</span></div>`;
+    }
+    if ((S.showReading && S.showRomaji) || reveal) {
+      const g = guideRoma(q);
+      h += `<div class="roma"><span class="d">${esc(g.done)}</span><span class="c">${esc(g.cur)}</span><span class="r">${esc(g.rest)}</span></div>`;
+    } else if (!S.showReading) {
+      h += `<div class="typed roma"><span class="d">${esc(q.parts.join('') + q.buf) || '&nbsp;'}</span></div>`;
+    }
+    if (reveal) h += `<div class="meaning">${esc(q.m)}</div>`;
+  } else if (S.enMode === 'copy') {
+    h += `<div class="q en"><span class="d">${esc(q.w.slice(0, q.pos))}</span><span class="c">${esc(q.w.slice(q.pos, q.pos + 1))}</span><span class="r">${esc(q.w.slice(q.pos + 1))}</span></div>`;
+    if (S.showMeaning || reveal) h += `<div class="meaning">${esc(q.p)}｜${esc(q.m)}</div>`;
+  } else {
+    h += `<div class="q ja">${esc(q.m)}</div><div class="meaning">${esc(q.p)}</div>`;
+    if (reveal) {
+      h += `<div class="slots reveal">${esc(q.w)}</div>`;
+    } else if (S.showHint) {
+      let s = '';
+      for (let i = 0; i < q.w.length; i++) {
+        if (i < q.pos) s += `<span class="d">${esc(q.w[i])}</span>`;
+        else if (i === 0) s += `<span class="h">${esc(q.w[0])}</span>`;
+        else s += `<span class="h">_</span>`;
+      }
+      h += `<div class="slots">${s}</div>`;
+    } else {
+      h += `<div class="slots"><span class="d">${esc(q.w.slice(0, q.pos))}</span><span class="h">_</span></div>`;
+    }
+  }
+  $('stage').innerHTML = h;
+}
+
+function missFx() {
+  const c = $('card');
+  c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake', 'flash');
+  clearTimeout(missFx.t); missFx.t = setTimeout(() => c.classList.remove('flash'), 160);
+}
+
+// 全角英字・カタカナ・ひらがなを半角ローマ字にそろえる
+function normalizeInput(s) {
+  let out = '';
+  for (let c of String(s).normalize('NFKC')) {
+    const code = c.charCodeAt(0);
+    if (code >= 0x30a1 && code <= 0x30f6) c = String.fromCharCode(code - 0x60);  // カタカナ → ひらがな
+    if (c === 'ん') out += 'nn';
+    else if (T[c]) out += T[c][0];
+    else out += c;
+  }
+  return out.toLowerCase();
+}
+const CODE_KEYS = { Minus: '-', Quote: "'", IntlYen: '-' };
+function keyFromEvent(e) {
+  if (/^Key[A-Z]$/.test(e.code)) return e.code.slice(3).toLowerCase();
+  return CODE_KEYS[e.code] || '';
+}
+
+function keyIn(raw) {
+  for (const ch of normalizeInput(raw)) keyOne(ch);
+}
+function keyOne(ch) {
+  if (!G || G.lock || screen !== 'play') return;
+  if (!/^[a-z\-']$/.test(ch)) return;
+  const q = G.qs[G.qi];
+  let good;
+  if (S.cat === 'kanji') good = kanaStep(q, ch);
+  else {
+    good = q.w[q.pos] === ch;
+    if (good) q.pos++;
+    else { const k = `${q.pos + 1}文字目の「${q.w[q.pos]}」`; q.missAt[k] = (q.missAt[k] || 0) + 1; }
+  }
+  if (good) G.ok++; else { G.miss++; q.miss++; missFx(); }
+  const done = S.cat === 'kanji' ? q.ui >= q.units.length : q.pos >= q.w.length;
+  if (done) nextQ(); else renderQ();
+  updateHud();
+}
+
+function kanaStep(q, ch) {
+  const u = q.units[q.ui];
+  if (!u) return false;
+  const nb = q.buf + ch;
+  const cand = u.o.filter(s => s.startsWith(nb));
+  if (cand.length) {
+    q.buf = nb;
+    if (cand.length === 1 && cand[0] === nb) { q.parts.push(nb); q.buf = ''; q.ui++; }
+    return true;
+  }
+  if (q.buf && u.o.includes(q.buf)) {           // 「ん」を n 一つで確定して次へ
+    q.parts.push(q.buf); q.buf = ''; q.ui++;
+    if (q.ui < q.units.length) {
+      const ok = kanaStep(q, ch);
+      if (ok) return true;
+    }
+    recMiss(q, q.units[q.ui]); return false;
+  }
+  recMiss(q, u); return false;
+}
+function recMiss(q, u) { if (!u) return; const k = `「${u.k}」`; q.missAt[k] = (q.missAt[k] || 0) + 1; }
+
+function nextQ() {
+  G.qi++;
+  if (G.qi >= G.qs.length) return finish();
+  renderQ(); updateHud();
+}
+
+function skipQ() {
+  if (!G || G.lock || screen !== 'play') return;
+  const q = G.qs[G.qi];
+  q.skipped = true;
+  G.lock = true;
+  renderQ(true);
+  setTimeout(() => { if (!G || screen !== 'play') return; G.lock = false; nextQ(); }, 1600);
+}
+
+function finish() {
+  G.t1 = performance.now();
+  clearInterval(tick);
+  updateHud();
+  renderResult();
+  show('result');
+  window.scrollTo(0, 0);
+}
+
+/* ============ 入力 ============ */
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (screen === 'setup') {
+    if (e.key === 'Enter' && !e.target.closest('button, input')) { e.preventDefault(); startGame(); }
+    return;
+  }
+  if (screen === 'result') {
+    if (e.key === 'Enter' && !e.target.closest('button')) { e.preventDefault(); startGame(); }
+    if (e.key === 'Escape') { show('setup'); renderSetup(); }
+    return;
+  }
+  if (e.key === 'Escape') { e.preventDefault(); skipQ(); return; }
+  // IME オン時は key が "Process" になるので、物理キー（code）から文字を取る
+  if (e.key === 'Process' || e.key === 'Unidentified' || e.isComposing) {
+    const k = keyFromEvent(e);
+    if (k) { e.preventDefault(); lastCode = performance.now(); keyIn(k); }
+    return;
+  }
+  if (e.key.length === 1) { e.preventDefault(); keyIn(e.key); }
+});
+// スマホ：変換中の文字は確定時にまとめて処理（キー入力で処理済みなら捨てる）
+let lastCode = -1e9, compStart = 0;
+const codeHandled = () => lastCode >= compStart - 500;
+$('sink').addEventListener('compositionstart', () => { compStart = performance.now(); });
+$('sink').addEventListener('input', e => {
+  if (e.isComposing) return;
+  const v = e.target.value; e.target.value = '';
+  if (performance.now() - lastCode > 500) keyIn(v);
+});
+$('sink').addEventListener('compositionend', e => {
+  const v = e.data || e.target.value;
+  e.target.value = '';
+  if (!codeHandled()) keyIn(v);
+});
+$('card').addEventListener('click', focusSink);
+$('skipBtn').addEventListener('click', () => { skipQ(); focusSink(); });
+$('quitBtn').addEventListener('click', () => { clearInterval(tick); G = null; show('setup'); renderSetup(); });
+if (TOUCH) $('footHint').textContent = 'カードをタップするとキーボードが開きます（ローマ字・かなどちらでも可）';
+
+/* ============ リザルト ============ */
+function rankOf(kpm, acc) {
+  const s = kpm * Math.pow(acc / 100, 2);
+  return s >= 330 ? 'S' : s >= 250 ? 'A' : s >= 170 ? 'B' : s >= 100 ? 'C' : 'D';
+}
+
+function renderResult() {
+  const t = elapsed();
+  const kpm = t > 0 ? Math.round(G.ok / t * 60) : 0;
+  const acc = G.ok + G.miss ? Math.round(G.ok / (G.ok + G.miss) * 1000) / 10 : 0;
+  const skipped = G.qs.filter(q => q.skipped).length;
+  const wrong = G.qs.filter(q => q.miss > 0 || q.skipped);
+  const clean = G.qs.length - wrong.length;
+  const rank = skipped ? (rankOf(kpm, acc) === 'S' ? 'A' : rankOf(kpm, acc)) : rankOf(kpm, acc);
+
+  let newBest = false;
+  if (!G.review) {
+    const all = store.get('dojo.best', {});
+    const key = modeKey() + '-' + S.level;
+    const order = 'DCBAS';
+    const prev = all[key];
+    if (!prev || order.indexOf(rank) > order.indexOf(prev.rank) || (rank === prev.rank && kpm > prev.kpm)) {
+      all[key] = { rank, kpm, acc }; store.set('dojo.best', all); newBest = true;
+    }
+  }
+
+  let h = `
+  <div class="rank">
+    <div class="big" aria-label="ランク ${rank}">${rank}</div>
+    <div class="stats">
+      <div><small>打鍵/分</small><b>${kpm}</b></div>
+      <div><small>正確率</small><b>${acc}%</b></div>
+      <div><small>時間</small><b>${t.toFixed(1)}秒</b></div>
+      <div><small>ミス</small><b>${G.miss}</b></div>
+      <div><small>ノーミス</small><b>${clean}/${G.qs.length}</b></div>
+    </div>
+  </div>
+  <div class="best">${esc(modeLabel())} ・ Lv.${S.level}${G.review ? '（復習）' : ''}${newBest && !G.review ? ' <span class="newbest">自己ベスト更新</span>' : ''}</div>
+  <section class="panel">
+    <h2>間違えた問題の解説（${wrong.length}問）</h2>`;
+  if (!wrong.length) {
+    h += `<div class="perfect">全問ノーミスです。次のレベルにも挑戦してみましょう。</div>`;
+  } else {
+    h += `<div class="mlist">` + wrong.map(q => {
+      const errs = Object.entries(q.missAt).map(([k, n]) => `${k}で${n}回`);
+      const why = (q.skipped ? ['わからないでスキップ'] : []).concat(errs).join('、');
+      if (S.cat === 'kanji') {
+        const roma = q.units.map(u => u.o[0]).join('');
+        return `<article class="mcard">
+          <div class="mhead"><span class="w">${esc(q.w)}</span><span class="rd">${esc(q.r)}</span><span class="pos">${esc(roma)}</span></div>
+          <div class="mmean">${esc(q.m)}</div>
+          <div class="mnote">${esc(q.n)}</div>
+          <div class="myerr">あなたのミス：${esc(why)}</div>
+        </article>`;
+      }
+      return `<article class="mcard">
+        <div class="mhead"><span class="w en">${esc(q.w)}</span><span class="rd">${esc(q.m)}</span><span class="pos">${esc(q.p)}</span></div>
+        <div class="mnote">${esc(q.n)}</div>
+        <div class="mex">${esc(q.ex)}<span>${esc(q.exj)}</span></div>
+        <div class="myerr">あなたのミス：${esc(why)}</div>
+      </article>`;
+    }).join('') + `</div>`;
+  }
+  h += `</section>`;
+  const okq = G.qs.filter(q => !(q.miss > 0 || q.skipped));
+  if (okq.length) h += `<div class="okrow">ノーミスで打てた問題：${okq.map(q => `<span>${esc(q.w)}</span>`).join('')}</div>`;
+  h += `<div class="actions">
+    <button class="btn" type="button" id="againBtn">もう一度<kbd>Enter</kbd></button>
+    ${wrong.length ? `<button class="btn ghost" type="button" id="reviewBtn">間違えた問題だけ復習</button>` : ''}
+    <button class="btn ghost" type="button" id="backBtn">設定に戻る<kbd>Esc</kbd></button>
+  </div>`;
+  $('result').innerHTML = h;
+  const items = wrong.map(q => q.item);
+  $('againBtn').onclick = () => startGame();
+  if ($('reviewBtn')) $('reviewBtn').onclick = () => startGame(items);
+  $('backBtn').onclick = () => { show('setup'); renderSetup(); };
+}
+
+/* ============ 起動 ============ */
+function boot(data) {
+  if (data && data.settings) S = Object.assign({}, DEF, data.settings);
+  renderSetup(); show('setup');
+}
+window.claude?.hot?.snapshot?.(() => ({ settings: S }));
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+</script>
+</body>
+</html>
